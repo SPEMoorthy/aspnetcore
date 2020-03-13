@@ -29,7 +29,7 @@ export const monoPlatform: Platform = {
     });
   },
 
-  callEntryPoint: function callEntryPoint(assemblyName: string) {
+  callEntryPoint: async function callEntryPoint(assemblyName: string) : Promise<void> {
     // Instead of using Module.mono_call_assembly_entry_point, we have our own logic for invoking
     // the entrypoint which adds support for async main.
     // Currently we disregard the return value from the entrypoint, whether it's sync or async.
@@ -38,7 +38,7 @@ export const monoPlatform: Platform = {
     // .NET entrypoint method.
     const invokeEntrypoint = bindStaticMethod('Microsoft.AspNetCore.Components.WebAssembly', 'Microsoft.AspNetCore.Components.WebAssembly.Hosting.EntrypointInvoker', 'InvokeEntrypoint');
     // Note we're passing in null because passing arrays is problematic until https://github.com/mono/mono/issues/18245 is resolved.
-    invokeEntrypoint(assemblyName, null);
+    await invokeEntrypoint(assemblyName, null);
   },
 
   toJavaScriptString: function toJavaScriptString(managedString: System_String) {
@@ -206,6 +206,26 @@ function createEmscriptenModuleInstance(resourceLoader: WebAssemblyResourceLoade
       resourceLoader.loadResources(resources.pdb, filename => `_framework/_bin/${filename}`)
         .forEach(r => addResourceAsAssembly(r, r.name));
     }
+
+    // Wire-up callbacks for satellite assemblies. Blazor will call these as part of the application
+    // startup sequence to load satellite assemblies for the application's culture.
+    window['Blazor']._internal.getSatelliteAssemblyCultures = () : Pointer | undefined =>  {
+      const satelliteResources = resourceLoader.bootConfig.resources.satelliteResources;
+      return satelliteResources ? BINDING.js_array_to_mono_array(Object.keys(satelliteResources)) : undefined;
+    };
+
+    window['Blazor']._internal.loadSatelliteAssemblies = (dotnetArray: Pointer) : Pointer =>  {
+      const culturesToLoad = BINDING.mono_array_to_js_array<string>(dotnetArray);
+      const satelliteResources = resourceLoader.bootConfig.resources.satelliteResources!;
+
+      const result = Promise.all(
+        culturesToLoad.map(culture =>  Promise.all(
+            resourceLoader.loadResources(satelliteResources[culture], fileName => `_framework/_bin/${fileName}`)
+              .map(r => addResourceAsAssembly(r, changeExtension(r.name, '.dll')))
+      )));
+
+      return BINDING.js_to_mono_obj(result);
+    };
   });
 
   module.postRun.push(() => {

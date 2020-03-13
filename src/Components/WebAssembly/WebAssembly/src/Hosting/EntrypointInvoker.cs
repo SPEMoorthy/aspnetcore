@@ -5,43 +5,28 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components.WebAssembly.Services;
 
 namespace Microsoft.AspNetCore.Components.WebAssembly.Hosting
 {
     internal static class EntrypointInvoker
     {
-        // This method returns void because currently the JS side is not listening to any result,
-        // nor will it handle any exceptions. We handle all exceptions internally to this method.
-        // In the future we may want Blazor.start to return something that exposes the possibly-async
-        // entrypoint result to the JS caller. There's no requirement to do that today, and if we
-        // do change this it will be non-breaking.
-        public static void InvokeEntrypoint(string assemblyName, string[] args)
+        public static async Task InvokeEntrypoint(string assemblyName, string[] args)
         {
-            object entrypointResult;
             try
             {
+                var satelliteResourcesLoader = new SatelliteResourcesLoader(WebAssemblyJSRuntimeInvoker.Instance);
+                await satelliteResourcesLoader.LoadDefaultCultureResourcesAsync();
                 var assembly = Assembly.Load(assemblyName);
                 var entrypoint = FindUnderlyingEntrypoint(assembly);
                 var @params = entrypoint.GetParameters().Length == 1 ? new object[] { args ?? Array.Empty<string>() } : new object[] { };
-                entrypointResult = entrypoint.Invoke(null, @params);
+                await (Task)entrypoint.Invoke(null, @params);
+                await satelliteResourcesLoader.LoadUserCultureResourcesAsync();
             }
             catch (Exception syncException)
             {
                 HandleStartupException(syncException);
                 return;
-            }
-
-            // If the entrypoint is async, handle async exceptions in the same way that we would
-            // have handled sync ones
-            if (entrypointResult is Task entrypointTask)
-            {
-                entrypointTask.ContinueWith(task =>
-                {
-                    if (task.Exception != null)
-                    {
-                        HandleStartupException(task.Exception);
-                    }
-                });
             }
         }
 

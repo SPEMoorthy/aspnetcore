@@ -4,11 +4,13 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <ReferenceBlazorBuildLocally>true</ReferenceBlazorBuildLocally>
     <RazorLangVersion>3.0</RazorLangVersion>
+    <GenerateResxSource>false</GenerateResxSource>
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="Microsoft.AspNetCore.Components.WebAssembly" />
     <Reference Include="Microsoft.AspNetCore.Blazor.HttpClient" />
+    <Reference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
 
   <!-- A bit of msbuild magic to support reference resolver tests -->

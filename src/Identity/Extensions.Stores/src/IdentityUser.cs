@@ -38,16 +38,17 @@ namespace Microsoft.AspNetCore.Identity
     /// <summary>
     /// Represents a user in the identity system
     /// </summary>
-    /// <typeparam name="TKey">The type used for the primary key for the user.</typeparam>
-    public class IdentityUser<TKey> where TKey : IEquatable<TKey>
+    /// <typeparam name="TKeyCompId">The type used for the primary key for the user.</typeparam>
+    /// <typeparam name="TKeyId">The type used for the primary key for the user.</typeparam>
+    public class IdentityUser<TKeyCompId, TKeyId> where TKeyCompId : IEquatable<TKeyCompId> where TKeyId : IEquatable<TKeyId>
     {
         /// <summary>
-        /// Initializes a new instance of <see cref="IdentityUser{TKey}"/>.
+        /// Initializes a new instance of <see cref="IdentityUser{TKeyCompId, TKeyId}"/>.
         /// </summary>
         public IdentityUser() { }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="IdentityUser{TKey}"/>.
+        /// Initializes a new instance of <see cref="IdentityUser{TKeyCompId, TKeyId}"/>.
         /// </summary>
         /// <param name="userName">The user name.</param>
         public IdentityUser(string userName) : this()
@@ -55,11 +56,18 @@ namespace Microsoft.AspNetCore.Identity
             UserName = userName;
         }
 
+
         /// <summary>
         /// Gets or sets the primary key for this user.
         /// </summary>
         [PersonalData]
-        public virtual TKey Id { get; set; }
+        public virtual TKeyCompId CompId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the primary key for this user.
+        /// </summary>
+        [PersonalData]
+        public virtual TKeyId Id { get; set; }
 
         /// <summary>
         /// Gets or sets the user name for this user.

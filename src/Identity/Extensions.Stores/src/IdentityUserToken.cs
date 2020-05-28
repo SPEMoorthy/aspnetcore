@@ -8,13 +8,20 @@ namespace Microsoft.AspNetCore.Identity
     /// <summary>
     /// Represents an authentication token for a user.
     /// </summary>
-    /// <typeparam name="TKey">The type of the primary key used for users.</typeparam>
-    public class IdentityUserToken<TKey> where TKey : IEquatable<TKey>
+    /// <typeparam name="TKeyCompId">The type of the primary key used for users.</typeparam>
+    ///  <typeparam name="TKeyId">The type of the primary key used for users.</typeparam>
+    public class IdentityUserToken<TKeyCompId, TKeyId> where TKeyCompId : IEquatable<TKeyCompId> where TKeyId : IEquatable<TKeyId>
     {
+
         /// <summary>
         /// Gets or sets the primary key of the user that the token belongs to.
         /// </summary>
-        public virtual TKey UserId { get; set; }
+        public virtual TKeyCompId UserCompId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the primary key of the user that the token belongs to.
+        /// </summary>
+        public virtual TKeyId UserId { get; set; }
 
         /// <summary>
         /// Gets or sets the LoginProvider this token is from.

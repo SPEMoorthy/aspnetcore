@@ -15,7 +15,7 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
     /// Base class for the Entity Framework database context used for identity.
     /// </summary>
     /// <typeparam name="TUser">The type of the user objects.</typeparam>
-    public class IdentityUserContext<TUser> : IdentityUserContext<TUser, string> where TUser : IdentityUser
+    public class IdentityUserContext<TUser> : IdentityUserContext<TUser, int, string> where TUser : IdentityUser
     {
         /// <summary>
         /// Initializes a new instance of <see cref="IdentityUserContext{TUser}"/>.
@@ -33,10 +33,12 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
     /// Base class for the Entity Framework database context used for identity.
     /// </summary>
     /// <typeparam name="TUser">The type of user objects.</typeparam>
-    /// <typeparam name="TKey">The type of the primary key for users and roles.</typeparam>
-    public class IdentityUserContext<TUser, TKey> : IdentityUserContext<TUser, TKey, IdentityUserClaim<TKey>, IdentityUserLogin<TKey>, IdentityUserToken<TKey>>
-        where TUser : IdentityUser<TKey>
-        where TKey : IEquatable<TKey>
+    /// <typeparam name="TKeyCompId">The type of the primary key for users and roles.</typeparam>
+    /// <typeparam name="TKeyId">The type of the primary key for users and roles.</typeparam>
+    public class IdentityUserContext<TUser, TKeyCompId, TKeyId> : IdentityUserContext<TUser, TKeyCompId, TKeyId, IdentityUserClaim<TKeyCompId, TKeyId>, IdentityUserLogin<TKeyCompId, TKeyId>, IdentityUserToken<TKeyCompId, TKeyId>>
+        where TUser : IdentityUser<TKeyCompId, TKeyId>
+        where TKeyId : IEquatable<TKeyId>
+        where TKeyCompId : IEquatable<TKeyCompId>
     {
         /// <summary>
         /// Initializes a new instance of the db context.
@@ -54,16 +56,18 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
     /// Base class for the Entity Framework database context used for identity.
     /// </summary>
     /// <typeparam name="TUser">The type of user objects.</typeparam>
-    /// <typeparam name="TKey">The type of the primary key for users and roles.</typeparam>
+    /// <typeparam name="TKeyCompId">The type of the primary key for users and roles.</typeparam>
+    /// <typeparam name="TKeyId">The type of the primary key for users and roles.</typeparam>
     /// <typeparam name="TUserClaim">The type of the user claim object.</typeparam>
     /// <typeparam name="TUserLogin">The type of the user login object.</typeparam>
     /// <typeparam name="TUserToken">The type of the user token object.</typeparam>
-    public abstract class IdentityUserContext<TUser, TKey, TUserClaim, TUserLogin, TUserToken> : DbContext
-        where TUser : IdentityUser<TKey>
-        where TKey : IEquatable<TKey>
-        where TUserClaim : IdentityUserClaim<TKey>
-        where TUserLogin : IdentityUserLogin<TKey>
-        where TUserToken : IdentityUserToken<TKey>
+    public abstract class IdentityUserContext<TUser, TKeyCompId, TKeyId, TUserClaim, TUserLogin, TUserToken> : DbContext
+        where TUser : IdentityUser<TKeyCompId, TKeyId>
+         where TKeyId : IEquatable<TKeyId>
+        where TKeyCompId : IEquatable<TKeyCompId>
+        where TUserClaim : IdentityUserClaim<TKeyCompId, TKeyId>
+        where TUserLogin : IdentityUserLogin<TKeyCompId, TKeyId>
+        where TUserToken : IdentityUserToken<TKeyCompId, TKeyId>
     {
         /// <summary>
         /// Initializes a new instance of the class.
@@ -123,7 +127,7 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
 
             builder.Entity<TUser>(b =>
             {
-                b.HasKey(u => u.Id);
+                b.HasKey(u => new { u.CompId, u.Id });
                 b.HasIndex(u => u.NormalizedUserName).HasName("UserNameIndex").IsUnique();
                 b.HasIndex(u => u.NormalizedEmail).HasName("EmailIndex");
                 b.ToTable("AspNetUsers");
@@ -149,14 +153,14 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
                     }
                 }
 
-                b.HasMany<TUserClaim>().WithOne().HasForeignKey(uc => uc.UserId).IsRequired();
-                b.HasMany<TUserLogin>().WithOne().HasForeignKey(ul => ul.UserId).IsRequired();
-                b.HasMany<TUserToken>().WithOne().HasForeignKey(ut => ut.UserId).IsRequired();
+                b.HasMany<TUserClaim>().WithOne().HasForeignKey(uc => new { uc.UserCompId, uc.UserId }).IsRequired();
+                b.HasMany<TUserLogin>().WithOne().HasForeignKey(ul => new { ul.UserCompId, ul.UserId }).IsRequired();
+                b.HasMany<TUserToken>().WithOne().HasForeignKey(ut => new { ut.UserCompId, ut.UserId }).IsRequired();
             });
 
             builder.Entity<TUserClaim>(b =>
             {
-                b.HasKey(uc => uc.Id);
+                b.HasKey(uc => new { uc.UserCompId, uc.Id });
                 b.ToTable("AspNetUserClaims");
             });
 
@@ -175,7 +179,7 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
 
             builder.Entity<TUserToken>(b => 
             {
-                b.HasKey(t => new { t.UserId, t.LoginProvider, t.Name });
+                b.HasKey(t => new { t.UserCompId, t.UserId, t.LoginProvider, t.Name });
 
                 if (maxKeyLength > 0)
                 {

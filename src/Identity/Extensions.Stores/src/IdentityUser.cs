@@ -6,9 +6,9 @@ using System;
 namespace Microsoft.AspNetCore.Identity
 {
     /// <summary>
-    /// The default implementation of <see cref="IdentityUser{TKey}"/> which uses a string as a primary key.
+    /// The default implementation of <see cref="IdentityUser{TKeyCompId, TKeyId}"/> which uses a string as a primary key.
     /// </summary>
-    public class IdentityUser : IdentityUser<string>
+    public class IdentityUser : IdentityUser<int, string>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="IdentityUser"/>.
@@ -18,6 +18,7 @@ namespace Microsoft.AspNetCore.Identity
         /// </remarks>
         public IdentityUser()
         {
+            CompId = 1;
             Id = Guid.NewGuid().ToString();
             SecurityStamp = Guid.NewGuid().ToString();
         }
@@ -25,12 +26,16 @@ namespace Microsoft.AspNetCore.Identity
         /// <summary>
         /// Initializes a new instance of <see cref="IdentityUser"/>.
         /// </summary>
+        /// <param name="compId">The Company Id.</param>
+        /// <param name="id">User Id</param>
         /// <param name="userName">The user name.</param>
         /// <remarks>
         /// The Id property is initialized to form a new GUID string value.
         /// </remarks>
-        public IdentityUser(string userName) : this()
+        public IdentityUser(int compId, string id, string userName) : this()
         {
+            CompId = compId;
+            Id = id;
             UserName = userName;
         }
     }

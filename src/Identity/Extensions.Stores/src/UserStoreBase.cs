@@ -15,11 +15,12 @@ namespace Microsoft.AspNetCore.Identity
     /// Represents a new instance of a persistence store for the specified user type.
     /// </summary>
     /// <typeparam name="TUser">The type representing a user.</typeparam>
-    /// <typeparam name="TKey">The type of the primary key for a user.</typeparam>
+    /// <typeparam name="TKeyCompId">The type of the primary key for a user.</typeparam>
+    /// <typeparam name="TKeyId">The type of the primary key for a user.</typeparam>
     /// <typeparam name="TUserClaim">The type representing a claim.</typeparam>
     /// <typeparam name="TUserLogin">The type representing a user external login.</typeparam>
     /// <typeparam name="TUserToken">The type representing a user token.</typeparam>
-    public abstract class UserStoreBase<TUser, TKey, TUserClaim, TUserLogin, TUserToken> :
+    public abstract class UserStoreBase<TUser, TKeyCompId, TKeyId, TUserClaim, TUserLogin, TUserToken> :
         IUserLoginStore<TUser>,
         IUserClaimStore<TUser>,
         IUserPasswordStore<TUser>,
@@ -32,11 +33,12 @@ namespace Microsoft.AspNetCore.Identity
         IUserAuthenticationTokenStore<TUser>,
         IUserAuthenticatorKeyStore<TUser>,
         IUserTwoFactorRecoveryCodeStore<TUser>
-        where TUser : IdentityUser<TKey>
-        where TKey : IEquatable<TKey>
-        where TUserClaim : IdentityUserClaim<TKey>, new()
-        where TUserLogin : IdentityUserLogin<TKey>, new()
-        where TUserToken : IdentityUserToken<TKey>, new()
+        where TUser : IdentityUser<TKeyCompId, TKeyId>
+        where TKeyCompId : IEquatable<TKeyCompId>
+        where TKeyId : IEquatable<TKeyId>
+        where TUserClaim : IdentityUserClaim<TKeyCompId, TKeyId>, new()
+        where TUserLogin : IdentityUserLogin<TKeyCompId, TKeyId>, new()
+        where TUserToken : IdentityUserToken<TKeyCompId, TKeyId>, new()
     {
         /// <summary>
         /// Creates a new instance.
@@ -60,20 +62,20 @@ namespace Microsoft.AspNetCore.Identity
         public IdentityErrorDescriber ErrorDescriber { get; set; }
 
         /// <summary>
-        /// Called to create a new instance of a <see cref="IdentityUserClaim{TKey}"/>.
+        /// Called to create a new instance of a <see cref="IdentityUserClaim{TKeyCompId, TKeyId}"/>.
         /// </summary>
         /// <param name="user">The associated user.</param>
         /// <param name="claim">The associated claim.</param>
         /// <returns></returns>
         protected virtual TUserClaim CreateUserClaim(TUser user, Claim claim)
         {
-            var userClaim = new TUserClaim { UserId = user.Id };
+            var userClaim = new TUserClaim { UserCompId = user.CompId,  UserId = user.Id };
             userClaim.InitializeFromClaim(claim);
             return userClaim;
         }
 
         /// <summary>
-        /// Called to create a new instance of a <see cref="IdentityUserLogin{TKey}"/>.
+        /// Called to create a new instance of a <see cref="IdentityUserLogin{TKeyCompId, TKeyId}"/>.
         /// </summary>
         /// <param name="user">The associated user.</param>
         /// <param name="login">The sasociated login.</param>
@@ -82,6 +84,7 @@ namespace Microsoft.AspNetCore.Identity
         {
             return new TUserLogin
             {
+                UserCompId = user.CompId,
                 UserId = user.Id,
                 ProviderKey = login.ProviderKey,
                 LoginProvider = login.LoginProvider,
@@ -90,7 +93,7 @@ namespace Microsoft.AspNetCore.Identity
         }
 
         /// <summary>
-        /// Called to create a new instance of a <see cref="IdentityUserToken{TKey}"/>.
+        /// Called to create a new instance of a <see cref="IdentityUserToken{TKeyCompId, TKeyId}"/>.
         /// </summary>
         /// <param name="user">The associated user.</param>
         /// <param name="loginProvider">The associated login provider.</param>
@@ -101,6 +104,7 @@ namespace Microsoft.AspNetCore.Identity
         {
             return new TUserToken
             {
+                UserCompId = user.CompId,
                 UserId = user.Id,
                 LoginProvider = loginProvider,
                 Name = name,
@@ -122,7 +126,7 @@ namespace Microsoft.AspNetCore.Identity
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            return Task.FromResult(ConvertIdToString(user.Id));
+            return Task.FromResult(ConvertIdToString(user.CompId, user.Id));
         }
 
         /// <summary>
@@ -231,32 +235,33 @@ namespace Microsoft.AspNetCore.Identity
         /// </returns>
         public abstract Task<TUser> FindByIdAsync(string userId, CancellationToken cancellationToken = default(CancellationToken));
 
-        /// <summary>
-        /// Converts the provided <paramref name="id"/> to a strongly typed key object.
-        /// </summary>
-        /// <param name="id">The id to convert.</param>
-        /// <returns>An instance of <typeparamref name="TKey"/> representing the provided <paramref name="id"/>.</returns>
-        public virtual TKey ConvertIdFromString(string id)
-        {
-            if (id == null)
-            {
-                return default(TKey);
-            }
-            return (TKey)TypeDescriptor.GetConverter(typeof(TKey)).ConvertFromInvariantString(id);
-        }
+        ///// <summary>
+        ///// Converts the provided <paramref name="id"/> to a strongly typed key object.
+        ///// </summary>
+        ///// <param name="id">The id to convert.</param>
+        ///// <returns>An instance of <typeparamref name="TKey"/> representing the provided <paramref name="id"/>.</returns>
+        //public virtual TKey ConvertIdFromString(string id)
+        //{
+        //    if (id == null)
+        //    {
+        //        return default(TKey);
+        //    }
+        //    return (TKey)TypeDescriptor.GetConverter(typeof(TKey)).ConvertFromInvariantString(id);
+        //}
 
         /// <summary>
         /// Converts the provided <paramref name="id"/> to its string representation.
         /// </summary>
+        /// <param name="compId"></param>
         /// <param name="id">The id to convert.</param>
         /// <returns>An <see cref="string"/> representation of the provided <paramref name="id"/>.</returns>
-        public virtual string ConvertIdToString(TKey id)
+        public virtual string ConvertIdToString(TKeyCompId compId, TKeyId id)
         {
-            if (object.Equals(id, default(TKey)))
+            if (object.Equals(compId, default(TKeyCompId)) && object.Equals(id, default(TKeyId)))
             {
                 return null;
             }
-            return id.ToString();
+            return compId.ToString() + "$$$" + id.ToString();
         }
 
         /// <summary>
@@ -329,20 +334,22 @@ namespace Microsoft.AspNetCore.Identity
         /// <summary>
         /// Return a user with the matching userId if it exists.
         /// </summary>
+        /// <param name="compId"></param>
         /// <param name="userId">The user's id.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>The user if it exists.</returns>
-        protected abstract Task<TUser> FindUserAsync(TKey userId, CancellationToken cancellationToken);
+        protected abstract Task<TUser> FindUserAsync(TKeyCompId compId,  TKeyId userId, CancellationToken cancellationToken);
 
         /// <summary>
         /// Return a user login with the matching userId, provider, providerKey if it exists.
         /// </summary>
+        /// <param name="compId"></param>
         /// <param name="userId">The user's id.</param>
         /// <param name="loginProvider">The login provider name.</param>
         /// <param name="providerKey">The key provided by the <paramref name="loginProvider"/> to identify a user.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>The user login if it exists.</returns>
-        protected abstract Task<TUserLogin> FindUserLoginAsync(TKey userId, string loginProvider, string providerKey, CancellationToken cancellationToken);
+        protected abstract Task<TUserLogin> FindUserLoginAsync(TKeyCompId compId, TKeyId userId, string loginProvider, string providerKey, CancellationToken cancellationToken);
 
         /// <summary>
         /// Return a user login with  provider, providerKey if it exists.
@@ -454,7 +461,7 @@ namespace Microsoft.AspNetCore.Identity
             var userLogin = await FindUserLoginAsync(loginProvider, providerKey, cancellationToken);
             if (userLogin != null)
             {
-                return await FindUserAsync(userLogin.UserId, cancellationToken);
+                return await FindUserAsync(userLogin.UserCompId, userLogin.UserId, cancellationToken);
             }
             return null;
         }
@@ -1078,23 +1085,25 @@ namespace Microsoft.AspNetCore.Identity
     /// </summary>
     /// <typeparam name="TUser">The type representing a user.</typeparam>
     /// <typeparam name="TRole">The type representing a role.</typeparam>
-    /// <typeparam name="TKey">The type of the primary key for a role.</typeparam>
+    /// <typeparam name="TKeyCompId">The type of the primary key for a role.</typeparam>
+    /// <typeparam name="TKeyId">The type of the primary key for a role.</typeparam>
     /// <typeparam name="TUserClaim">The type representing a claim.</typeparam>
     /// <typeparam name="TUserRole">The type representing a user role.</typeparam>
     /// <typeparam name="TUserLogin">The type representing a user external login.</typeparam>
     /// <typeparam name="TUserToken">The type representing a user token.</typeparam>
     /// <typeparam name="TRoleClaim">The type representing a role claim.</typeparam>
-    public abstract class UserStoreBase<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim> :
-        UserStoreBase<TUser, TKey, TUserClaim, TUserLogin, TUserToken>,
+    public abstract class UserStoreBase<TUser, TRole, TKeyCompId, TKeyId, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim> :
+        UserStoreBase<TUser, TKeyCompId, TKeyId, TUserClaim, TUserLogin, TUserToken>,
         IUserRoleStore<TUser>
-        where TUser : IdentityUser<TKey>
-        where TRole : IdentityRole<TKey> 
-        where TKey : IEquatable<TKey>
-        where TUserClaim : IdentityUserClaim<TKey>, new()
-        where TUserRole : IdentityUserRole<TKey>, new()
-        where TUserLogin : IdentityUserLogin<TKey>, new()
-        where TUserToken : IdentityUserToken<TKey>, new()
-        where TRoleClaim : IdentityRoleClaim<TKey>, new()
+        where TUser : IdentityUser<TKeyCompId, TKeyId>
+        where TRole : IdentityRole<TKeyCompId, TKeyId>
+        where TKeyId : IEquatable<TKeyId>
+        where TKeyCompId : IEquatable<TKeyCompId>
+        where TUserClaim : IdentityUserClaim<TKeyCompId, TKeyId>, new()
+        where TUserRole : IdentityUserRole<TKeyCompId, TKeyId>, new()
+        where TUserLogin : IdentityUserLogin<TKeyCompId, TKeyId>, new()
+        where TUserToken : IdentityUserToken<TKeyCompId, TKeyId>, new()
+        where TRoleClaim : IdentityRoleClaim<TKeyCompId, TKeyId>, new()
     {
         /// <summary>
         /// Creates a new instance.
@@ -1103,7 +1112,7 @@ namespace Microsoft.AspNetCore.Identity
         public UserStoreBase(IdentityErrorDescriber describer) : base(describer) { }
 
         /// <summary>
-        /// Called to create a new instance of a <see cref="IdentityUserRole{TKey}"/>.
+        /// Called to create a new instance of a <see cref="IdentityUserRole{TKeyCompId, TKeyId}"/>.
         /// </summary>
         /// <param name="user">The associated user.</param>
         /// <param name="role">The associated role.</param>
@@ -1112,6 +1121,7 @@ namespace Microsoft.AspNetCore.Identity
         {
             return new TUserRole()
             {
+                UserCompId = user.CompId,
                 UserId = user.Id,
                 RoleId = role.Id
             };
@@ -1175,10 +1185,12 @@ namespace Microsoft.AspNetCore.Identity
         /// <summary>
         /// Return a user role for the userId and roleId if it exists.
         /// </summary>
+        /// <param name="userCompId"></param>
         /// <param name="userId">The user's id.</param>
+        /// <param name="roleCompId"></param>
         /// <param name="roleId">The role's id.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>The user role if it exists.</returns>
-        protected abstract Task<TUserRole> FindUserRoleAsync(TKey userId, TKey roleId, CancellationToken cancellationToken);
+        protected abstract Task<TUserRole> FindUserRoleAsync(TKeyCompId userCompId, TKeyId userId, TKeyCompId roleCompId, TKeyId roleId, CancellationToken cancellationToken);
     }
 }

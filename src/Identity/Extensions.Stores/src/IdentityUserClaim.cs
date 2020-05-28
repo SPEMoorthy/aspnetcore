@@ -9,18 +9,25 @@ namespace Microsoft.AspNetCore.Identity
     /// <summary>
     /// Represents a claim that a user possesses. 
     /// </summary>
-    /// <typeparam name="TKey">The type used for the primary key for this user that possesses this claim.</typeparam>
-    public class IdentityUserClaim<TKey> where TKey : IEquatable<TKey>
+    /// <typeparam name="TKeyCompId">The type used for the primary key for this user that possesses this claim.</typeparam>
+    /// <typeparam name="TKeyId">The type used for the primary key for this user that possesses this claim.</typeparam>
+    public class IdentityUserClaim<TKeyCompId, TKeyId> where TKeyCompId : IEquatable<TKeyCompId> where TKeyId : IEquatable<TKeyId>
     {
         /// <summary>
         /// Gets or sets the identifier for this user claim.
         /// </summary>
         public virtual int Id { get; set; }
 
+
         /// <summary>
         /// Gets or sets the primary key of the user associated with this claim.
         /// </summary>
-        public virtual TKey UserId { get; set; }
+        public virtual TKeyCompId UserCompId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the primary key of the user associated with this claim.
+        /// </summary>
+        public virtual TKeyId UserId { get; set; }
 
         /// <summary>
         /// Gets or sets the claim type for this claim.

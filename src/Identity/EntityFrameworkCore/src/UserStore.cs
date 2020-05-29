@@ -14,9 +14,9 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
 {
     /// <summary>
     /// Represents a new instance of a persistence store for users, using the default implementation
-    /// of <see cref="IdentityUser{TKey}"/> with a string as a primary key.
+    /// of <see cref="IdentityUser{TKeyCompId, TKeyId}"/> with a string as a primary key.
     /// </summary>
-    public class UserStore : UserStore<IdentityUser<string>>
+    public class UserStore : UserStore<IdentityUser<int, string>>
     {
         /// <summary>
         /// Constructs a new instance of <see cref="UserStore"/>.
@@ -30,8 +30,8 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
     /// Creates a new instance of a persistence store for the specified user type.
     /// </summary>
     /// <typeparam name="TUser">The type representing a user.</typeparam>
-    public class UserStore<TUser> : UserStore<TUser, IdentityRole, DbContext, string>
-        where TUser : IdentityUser<string>, new()
+    public class UserStore<TUser> : UserStore<TUser, IdentityRole, DbContext, int, string>
+        where TUser : IdentityUser<int,string>, new()
     {
         /// <summary>
         /// Constructs a new instance of <see cref="UserStore{TUser}"/>.
@@ -47,9 +47,9 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
     /// <typeparam name="TUser">The type representing a user.</typeparam>
     /// <typeparam name="TRole">The type representing a role.</typeparam>
     /// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
-    public class UserStore<TUser, TRole, TContext> : UserStore<TUser, TRole, TContext, string>
-        where TUser : IdentityUser<string>
-        where TRole : IdentityRole<string>
+    public class UserStore<TUser, TRole, TContext> : UserStore<TUser, TRole, TContext, int, string>
+        where TUser : IdentityUser<int, string>
+        where TRole : IdentityRole<int, string>
         where TContext : DbContext
     {
         /// <summary>
@@ -66,15 +66,17 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
     /// <typeparam name="TUser">The type representing a user.</typeparam>
     /// <typeparam name="TRole">The type representing a role.</typeparam>
     /// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
-    /// <typeparam name="TKey">The type of the primary key for a role.</typeparam>
-    public class UserStore<TUser, TRole, TContext, TKey> : UserStore<TUser, TRole, TContext, TKey, IdentityUserClaim<TKey>, IdentityUserRole<TKey>, IdentityUserLogin<TKey>, IdentityUserToken<TKey>, IdentityRoleClaim<TKey>>
-        where TUser : IdentityUser<TKey>
-        where TRole : IdentityRole<TKey>
+    /// <typeparam name="TKeyCompId">The type of the primary key for a role.</typeparam>
+    /// <typeparam name="TKeyId">The type of the primary key for a role.</typeparam>
+    public class UserStore<TUser, TRole, TContext, TKeyCompId, TKeyId> : UserStore<TUser, TRole, TContext, TKeyCompId, TKeyId, IdentityUserClaim<TKeyCompId, TKeyId>, IdentityUserRole<TKeyCompId, TKeyId>, IdentityUserLogin<TKeyCompId, TKeyId>, IdentityUserToken<TKeyCompId, TKeyId>, IdentityRoleClaim<TKeyCompId, TKeyId>>
+        where TUser : IdentityUser<TKeyCompId, TKeyId>
+        where TRole : IdentityRole<TKeyCompId, TKeyId>
         where TContext : DbContext
-        where TKey : IEquatable<TKey>
+        where TKeyCompId : IEquatable<TKeyCompId>
+        where TKeyId : IEquatable<TKeyId>
     {
         /// <summary>
-        /// Constructs a new instance of <see cref="UserStore{TUser, TRole, TContext, TKey}"/>.
+        /// Constructs a new instance of <see cref="UserStore{TUser, TRole, TContext, TKeyCompId, TKeyId}"/>.
         /// </summary>
         /// <param name="context">The <see cref="DbContext"/>.</param>
         /// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
@@ -87,24 +89,26 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
     /// <typeparam name="TUser">The type representing a user.</typeparam>
     /// <typeparam name="TRole">The type representing a role.</typeparam>
     /// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
-    /// <typeparam name="TKey">The type of the primary key for a role.</typeparam>
+    /// <typeparam name="TKeyCompId">The type of the primary key for a role.</typeparam>
+    /// <typeparam name="TKeyId">The type of the primary key for a role.</typeparam>
     /// <typeparam name="TUserClaim">The type representing a claim.</typeparam>
     /// <typeparam name="TUserRole">The type representing a user role.</typeparam>
     /// <typeparam name="TUserLogin">The type representing a user external login.</typeparam>
     /// <typeparam name="TUserToken">The type representing a user token.</typeparam>
     /// <typeparam name="TRoleClaim">The type representing a role claim.</typeparam>
-    public class UserStore<TUser, TRole, TContext, TKey, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim> :
-        UserStoreBase<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim>,
+    public class UserStore<TUser, TRole, TContext, TKeyCompId, TKeyId, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim> :
+        UserStoreBase<TUser, TRole, TKeyCompId, TKeyId, TUserClaim, TUserRole, TUserLogin, TUserToken, TRoleClaim>,
         IProtectedUserStore<TUser>
-        where TUser : IdentityUser<TKey>
-        where TRole : IdentityRole<TKey>
+        where TUser : IdentityUser<TKeyCompId, TKeyId>
+        where TRole : IdentityRole<TKeyCompId, TKeyId>
         where TContext : DbContext
-        where TKey : IEquatable<TKey>
-        where TUserClaim : IdentityUserClaim<TKey>, new()
-        where TUserRole : IdentityUserRole<TKey>, new()
-        where TUserLogin : IdentityUserLogin<TKey>, new()
-        where TUserToken : IdentityUserToken<TKey>, new()
-        where TRoleClaim : IdentityRoleClaim<TKey>, new()
+        where TKeyCompId : IEquatable<TKeyCompId>
+        where TKeyId : IEquatable<TKeyId>
+        where TUserClaim : IdentityUserClaim<TKeyCompId, TKeyId>, new()
+        where TUserRole : IdentityUserRole<TKeyCompId, TKeyId>, new()
+        where TUserLogin : IdentityUserLogin<TKeyCompId, TKeyId>, new()
+        where TUserToken : IdentityUserToken<TKeyCompId, TKeyId>, new()
+        where TRoleClaim : IdentityRoleClaim<TKeyCompId, TKeyId>, new()
     {
         /// <summary>
         /// Creates a new instance of the store.
@@ -226,17 +230,18 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
         /// <summary>
         /// Finds and returns a user, if any, who has the specified <paramref name="userId"/>.
         /// </summary>
+        /// <param name="compId"></param>
         /// <param name="userId">The user ID to search for.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>
         /// The <see cref="Task"/> that represents the asynchronous operation, containing the user matching the specified <paramref name="userId"/> if it exists.
         /// </returns>
-        public override Task<TUser> FindByIdAsync(string userId, CancellationToken cancellationToken = default(CancellationToken))
+        public override Task<TUser> FindByIdAsync(int compId, string userId, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
-            var id = ConvertIdFromString(userId);
-            return UsersSet.FindAsync(new object[] { id }, cancellationToken).AsTask();
+            //var id = ConvertIdFromString(userId);
+            return UsersSet.FindAsync(new object[] { compId, userId }, cancellationToken).AsTask();
         }
 
         /// <summary>
@@ -277,37 +282,41 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
         /// <summary>
         /// Return a user role for the userId and roleId if it exists.
         /// </summary>
+        /// <param name="userCompId"></param>
         /// <param name="userId">The user's id.</param>
+        /// <param name="roleCompId"></param>
         /// <param name="roleId">The role's id.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>The user role if it exists.</returns>
-        protected override Task<TUserRole> FindUserRoleAsync(TKey userId, TKey roleId, CancellationToken cancellationToken)
+        protected override Task<TUserRole> FindUserRoleAsync(TKeyCompId userCompId, TKeyId userId, TKeyCompId roleCompId, TKeyId roleId, CancellationToken cancellationToken)
         {
-            return UserRoles.FindAsync(new object[] { userId, roleId }, cancellationToken).AsTask();
+            return UserRoles.FindAsync(new object[] { userCompId, userId, roleCompId, roleId }, cancellationToken).AsTask();
         }
 
         /// <summary>
         /// Return a user with the matching userId if it exists.
         /// </summary>
+        /// <param name="compId"></param>
         /// <param name="userId">The user's id.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>The user if it exists.</returns>
-        protected override Task<TUser> FindUserAsync(TKey userId, CancellationToken cancellationToken)
+        protected override Task<TUser> FindUserAsync(TKeyCompId compId,  TKeyId userId, CancellationToken cancellationToken)
         {
-            return Users.SingleOrDefaultAsync(u => u.Id.Equals(userId), cancellationToken);
+            return Users.SingleOrDefaultAsync(u => u.CompId.Equals(compId) && u.Id.Equals(userId), cancellationToken);
         }
 
         /// <summary>
         /// Return a user login with the matching userId, provider, providerKey if it exists.
         /// </summary>
+        /// <param name="compId"></param>
         /// <param name="userId">The user's id.</param>
         /// <param name="loginProvider">The login provider name.</param>
         /// <param name="providerKey">The key provided by the <paramref name="loginProvider"/> to identify a user.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>The user login if it exists.</returns>
-        protected override Task<TUserLogin> FindUserLoginAsync(TKey userId, string loginProvider, string providerKey, CancellationToken cancellationToken)
+        protected override Task<TUserLogin> FindUserLoginAsync(TKeyCompId compId, TKeyId userId, string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
-            return UserLogins.SingleOrDefaultAsync(userLogin => userLogin.UserId.Equals(userId) && userLogin.LoginProvider == loginProvider && userLogin.ProviderKey == providerKey, cancellationToken);
+            return UserLogins.SingleOrDefaultAsync(userLogin => userLogin.UserCompId.Equals(compId) && userLogin.UserId.Equals(userId) && userLogin.LoginProvider == loginProvider && userLogin.ProviderKey == providerKey, cancellationToken);
         }
 
         /// <summary>
@@ -372,7 +381,7 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
             var roleEntity = await FindRoleAsync(normalizedRoleName, cancellationToken);
             if (roleEntity != null)
             {
-                var userRole = await FindUserRoleAsync(user.Id, roleEntity.Id, cancellationToken);
+                var userRole = await FindUserRoleAsync(user.CompId, user.Id, roleEntity.CompId, roleEntity.Id, cancellationToken);
                 if (userRole != null)
                 {
                     UserRoles.Remove(userRole);
@@ -425,7 +434,7 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
             var role = await FindRoleAsync(normalizedRoleName, cancellationToken);
             if (role != null)
             {
-                var userRole = await FindUserRoleAsync(user.Id, role.Id, cancellationToken);
+                var userRole = await FindUserRoleAsync(user.CompId, user.Id, role.CompId, role.Id, cancellationToken);
                 return userRole != null;
             }
             return false;
@@ -574,7 +583,7 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            var entry = await FindUserLoginAsync(user.Id, loginProvider, providerKey, cancellationToken);
+            var entry = await FindUserLoginAsync(user.CompId, user.Id, loginProvider, providerKey, cancellationToken);
             if (entry != null)
             {
                 UserLogins.Remove(entry);
@@ -619,7 +628,7 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
             var userLogin = await FindUserLoginAsync(loginProvider, providerKey, cancellationToken);
             if (userLogin != null)
             {
-                return await FindUserAsync(userLogin.UserId, cancellationToken);
+                return await FindUserAsync(userLogin.UserCompId, userLogin.UserId, cancellationToken);
             }
             return null;
         }

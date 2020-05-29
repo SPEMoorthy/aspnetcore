@@ -61,6 +61,17 @@ namespace Microsoft.AspNetCore.Identity
             UserName = userName;
         }
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="IdentityUser{TKeyCompId, TKeyId}"/>.
+        /// </summary>
+        /// <param name="compId"></param>
+        /// <param name="id"></param>
+        public IdentityUser(TKeyCompId compId, TKeyId id) : this()
+        {
+            CompId = compId;
+            Id = id;
+        }
+
 
         /// <summary>
         /// Gets or sets the primary key for this user.

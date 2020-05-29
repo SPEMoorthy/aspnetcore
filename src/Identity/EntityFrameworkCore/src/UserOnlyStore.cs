@@ -15,7 +15,7 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
     /// Creates a new instance of a persistence store for the specified user type.
     /// </summary>
     /// <typeparam name="TUser">The type representing a user.</typeparam>
-    public class UserOnlyStore<TUser> : UserOnlyStore<TUser, DbContext, string> where TUser : IdentityUser<string>, new()
+    public class UserOnlyStore<TUser> : UserOnlyStore<TUser, DbContext, int, string> where TUser : IdentityUser<int, string>, new()
     {
         /// <summary>
         /// Constructs a new instance of <see cref="UserOnlyStore{TUser}"/>.
@@ -30,8 +30,8 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
     /// </summary>
     /// <typeparam name="TUser">The type representing a user.</typeparam>
     /// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
-    public class UserOnlyStore<TUser, TContext> : UserOnlyStore<TUser, TContext, string>
-        where TUser : IdentityUser<string>
+    public class UserOnlyStore<TUser, TContext> : UserOnlyStore<TUser, TContext, int, string>
+        where TUser : IdentityUser<int, string>
         where TContext : DbContext
     {
         /// <summary>
@@ -47,11 +47,13 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
     /// </summary>
     /// <typeparam name="TUser">The type representing a user.</typeparam>
     /// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
-    /// <typeparam name="TKey">The type of the primary key for a role.</typeparam>
-    public class UserOnlyStore<TUser, TContext, TKey> : UserOnlyStore<TUser, TContext, TKey, IdentityUserClaim<TKey>, IdentityUserLogin<TKey>, IdentityUserToken<TKey>>
-        where TUser : IdentityUser<TKey>
+    /// <typeparam name="TKeyCompId">The type of the primary key for a role.</typeparam>
+    /// <typeparam name="TKeyId">The type of the primary key for a role.</typeparam>
+    public class UserOnlyStore<TUser, TContext, TKeyCompId, TKeyId> : UserOnlyStore<TUser, TContext, TKeyCompId, TKeyId, IdentityUserClaim<TKeyCompId, TKeyId>, IdentityUserLogin<TKeyCompId, TKeyId>, IdentityUserToken<TKeyCompId, TKeyId>>
+        where TUser : IdentityUser<TKeyCompId, TKeyId>
         where TContext : DbContext
-        where TKey : IEquatable<TKey>
+        where TKeyCompId : IEquatable<TKeyCompId>
+        where TKeyId : IEquatable<TKeyId>
     {
         /// <summary>
         /// Constructs a new instance of <see cref="UserStore{TUser, TRole, TContext, TKey}"/>.
@@ -66,12 +68,13 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
     /// </summary>
     /// <typeparam name="TUser">The type representing a user.</typeparam>
     /// <typeparam name="TContext">The type of the data context class used to access the store.</typeparam>
-    /// <typeparam name="TKey">The type of the primary key for a role.</typeparam>
+    /// <typeparam name="TKeyCompId">The type of the primary key for a role.</typeparam>
+    /// <typeparam name="TKeyId">The type of the primary key for a role.</typeparam>
     /// <typeparam name="TUserClaim">The type representing a claim.</typeparam>
     /// <typeparam name="TUserLogin">The type representing a user external login.</typeparam>
     /// <typeparam name="TUserToken">The type representing a user token.</typeparam>
-    public class UserOnlyStore<TUser, TContext, TKey, TUserClaim, TUserLogin, TUserToken> :
-        UserStoreBase<TUser, TKey, TUserClaim, TUserLogin, TUserToken>,
+    public class UserOnlyStore<TUser, TContext, TKeyCompId, TKeyId, TUserClaim, TUserLogin, TUserToken> :
+        UserStoreBase<TUser, TKeyCompId, TKeyId, TUserClaim, TUserLogin, TUserToken>,
         IUserLoginStore<TUser>,
         IUserClaimStore<TUser>,
         IUserPasswordStore<TUser>,
@@ -85,12 +88,13 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
         IUserAuthenticatorKeyStore<TUser>,
         IUserTwoFactorRecoveryCodeStore<TUser>,
         IProtectedUserStore<TUser>
-        where TUser : IdentityUser<TKey>
+        where TUser : IdentityUser<TKeyCompId, TKeyId>
         where TContext : DbContext
-        where TKey : IEquatable<TKey>
-        where TUserClaim : IdentityUserClaim<TKey>, new()
-        where TUserLogin : IdentityUserLogin<TKey>, new()
-        where TUserToken : IdentityUserToken<TKey>, new()
+        where TKeyCompId : IEquatable<TKeyCompId>
+        where TKeyId : IEquatable<TKeyId>
+        where TUserClaim : IdentityUserClaim<TKeyCompId, TKeyId>, new()
+        where TUserLogin : IdentityUserLogin<TKeyCompId, TKeyId>, new()
+        where TUserToken : IdentityUserToken<TKeyCompId, TKeyId>, new()
     {
         /// <summary>
         /// Creates a new instance of the store.
@@ -225,17 +229,18 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
         /// <summary>
         /// Finds and returns a user, if any, who has the specified <paramref name="userId"/>.
         /// </summary>
+        /// <param name="compId"></param>
         /// <param name="userId">The user ID to search for.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>
         /// The <see cref="Task"/> that represents the asynchronous operation, containing the user matching the specified <paramref name="userId"/> if it exists.
         /// </returns>
-        public override Task<TUser> FindByIdAsync(string userId, CancellationToken cancellationToken = default(CancellationToken))
+        public override Task<TUser> FindByIdAsync(int compId, string userId, CancellationToken cancellationToken = default(CancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
-            var id = ConvertIdFromString(userId);
-            return UsersSet.FindAsync(new object[] { id }, cancellationToken).AsTask();
+           // var id = ConvertIdFromString(userId);
+            return UsersSet.FindAsync(new object[] { compId, userId }, cancellationToken).AsTask();
         }
 
         /// <summary>
@@ -265,25 +270,27 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
         /// <summary>
         /// Return a user with the matching userId if it exists.
         /// </summary>
+        /// <param name="compId"></param>
         /// <param name="userId">The user's id.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>The user if it exists.</returns>
-        protected override Task<TUser> FindUserAsync(TKey userId, CancellationToken cancellationToken)
+        protected override Task<TUser> FindUserAsync(TKeyCompId compId, TKeyId userId, CancellationToken cancellationToken)
         {
-            return Users.SingleOrDefaultAsync(u => u.Id.Equals(userId), cancellationToken);
+            return Users.SingleOrDefaultAsync(u => u.CompId.Equals(compId) && u.Id.Equals(userId) , cancellationToken);
         }
 
         /// <summary>
         /// Return a user login with the matching userId, provider, providerKey if it exists.
         /// </summary>
+        /// <param name="compId"></param>
         /// <param name="userId">The user's id.</param>
         /// <param name="loginProvider">The login provider name.</param>
         /// <param name="providerKey">The key provided by the <paramref name="loginProvider"/> to identify a user.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>The user login if it exists.</returns>
-        protected override Task<TUserLogin> FindUserLoginAsync(TKey userId, string loginProvider, string providerKey, CancellationToken cancellationToken)
+        protected override Task<TUserLogin> FindUserLoginAsync(TKeyCompId compId, TKeyId userId, string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
-            return UserLogins.SingleOrDefaultAsync(userLogin => userLogin.UserId.Equals(userId) && userLogin.LoginProvider == loginProvider && userLogin.ProviderKey == providerKey, cancellationToken);
+            return UserLogins.SingleOrDefaultAsync(userLogin => userLogin.UserCompId.Equals(compId) && userLogin.UserId.Equals(userId) && userLogin.LoginProvider == loginProvider && userLogin.ProviderKey == providerKey, cancellationToken);
         }
 
         /// <summary>
@@ -441,7 +448,7 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            var entry = await FindUserLoginAsync(user.Id, loginProvider, providerKey, cancellationToken);
+            var entry = await FindUserLoginAsync(user.CompId, user.Id, loginProvider, providerKey, cancellationToken);
             if (entry != null)
             {
                 UserLogins.Remove(entry);
@@ -486,7 +493,7 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
             var userLogin = await FindUserLoginAsync(loginProvider, providerKey, cancellationToken);
             if (userLogin != null)
             {
-                return await FindUserAsync(userLogin.UserId, cancellationToken);
+                return await FindUserAsync(userLogin.UserCompId,userLogin.UserId, cancellationToken);
             }
             return null;
         }

@@ -228,12 +228,13 @@ namespace Microsoft.AspNetCore.Identity
         /// <summary>
         /// Finds and returns a user, if any, who has the specified <paramref name="userId"/>.
         /// </summary>
+        /// <param name="compId"></param>
         /// <param name="userId">The user ID to search for.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> used to propagate notifications that the operation should be canceled.</param>
         /// <returns>
         /// The <see cref="Task"/> that represents the asynchronous operation, containing the user matching the specified <paramref name="userId"/> if it exists.
         /// </returns>
-        public abstract Task<TUser> FindByIdAsync(string userId, CancellationToken cancellationToken = default(CancellationToken));
+        public abstract Task<TUser> FindByIdAsync(int compId, string userId, CancellationToken cancellationToken = default(CancellationToken));
 
         ///// <summary>
         ///// Converts the provided <paramref name="id"/> to a strongly typed key object.

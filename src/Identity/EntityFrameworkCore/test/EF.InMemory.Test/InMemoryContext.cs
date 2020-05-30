@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore.InMemory.Test
 {
     public class InMemoryContext :
-        InMemoryContext<IdentityUser, IdentityRole, string>
+        InMemoryContext<IdentityUser, IdentityRole, int, string>
     {
         private InMemoryContext(DbConnection connection) : base(connection)
         { }
@@ -25,8 +25,7 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore.InMemory.Test
         }
     }
 
-    public class InMemoryContext<TUser> :
-        IdentityUserContext<TUser, string>
+    public class InMemoryContext<TUser> : IdentityUserContext<TUser, int, string>
         where TUser : IdentityUser
     {
         private readonly DbConnection _connection;
@@ -43,10 +42,11 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore.InMemory.Test
             => optionsBuilder.UseSqlite(_connection);
     }
 
-    public class InMemoryContext<TUser, TRole, TKey> : IdentityDbContext<TUser, TRole, TKey>
-        where TUser : IdentityUser<TKey>
-        where TRole : IdentityRole<TKey>
-        where TKey : IEquatable<TKey>
+    public class InMemoryContext<TUser, TRole, TKeyCompId, TKeyId> : IdentityDbContext<TUser, TRole, TKeyCompId, TKeyId>
+        where TUser : IdentityUser<TKeyCompId, TKeyId>
+        where TRole : IdentityRole<TKeyCompId, TKeyId>
+        where TKeyCompId : IEquatable<TKeyCompId>
+        where TKeyId : IEquatable<TKeyId>
     {
         private readonly DbConnection _connection;
 
@@ -55,23 +55,24 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore.InMemory.Test
             _connection = connection;
         }
 
-        public static InMemoryContext<TUser, TRole, TKey> Create(DbConnection connection)
-            => InMemoryContext.Initialize(new InMemoryContext<TUser, TRole, TKey>(connection));
+        public static InMemoryContext<TUser, TRole, TKeyCompId, TKeyId> Create(DbConnection connection)
+            => InMemoryContext.Initialize(new InMemoryContext<TUser, TRole, TKeyCompId, TKeyId>(connection));
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
             => optionsBuilder.UseSqlite(_connection);
     }
 
-    public abstract class InMemoryContext<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken> :
-            IdentityDbContext<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>
-        where TUser : IdentityUser<TKey>
-        where TRole : IdentityRole<TKey>
-        where TKey : IEquatable<TKey>
-        where TUserClaim : IdentityUserClaim<TKey>
-        where TUserRole : IdentityUserRole<TKey>
-        where TUserLogin : IdentityUserLogin<TKey>
-        where TRoleClaim : IdentityRoleClaim<TKey>
-        where TUserToken : IdentityUserToken<TKey>
+    public abstract class InMemoryContext<TUser, TRole, TKeyCompId, TKeyId, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken> :
+            IdentityDbContext<TUser, TRole, TKeyCompId, TKeyId, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken>
+        where TUser : IdentityUser<TKeyCompId, TKeyId>
+        where TRole : IdentityRole<TKeyCompId, TKeyId>
+        where TKeyCompId : IEquatable<TKeyCompId>
+        where TKeyId : IEquatable<TKeyId>
+        where TUserClaim : IdentityUserClaim<TKeyCompId, TKeyId>
+        where TUserRole : IdentityUserRole<TKeyCompId, TKeyId>
+        where TUserLogin : IdentityUserLogin<TKeyCompId, TKeyId>
+        where TRoleClaim : IdentityRoleClaim<TKeyCompId, TKeyId>
+        where TUserToken : IdentityUserToken<TKeyCompId, TKeyId>
     {
         protected InMemoryContext(DbContextOptions options)
             : base(options)

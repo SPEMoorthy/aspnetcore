@@ -6,7 +6,7 @@ using System;
 namespace Microsoft.AspNetCore.Identity
 {
     /// <summary>
-    /// The default implementation of <see cref="IdentityUser{TKeyCompId, TKeyId}"/> which uses a string as a primary key.
+    /// The default implementation of <see cref="IdentityUser{TKeyCompId, TKeyId}"/> which uses a int, string as a primary key.
     /// </summary>
     public class IdentityUser : IdentityUser<int, string>
     {
@@ -45,7 +45,9 @@ namespace Microsoft.AspNetCore.Identity
     /// </summary>
     /// <typeparam name="TKeyCompId">The type used for the primary key for the user.</typeparam>
     /// <typeparam name="TKeyId">The type used for the primary key for the user.</typeparam>
-    public class IdentityUser<TKeyCompId, TKeyId> where TKeyCompId : IEquatable<TKeyCompId> where TKeyId : IEquatable<TKeyId>
+    public class IdentityUser<TKeyCompId, TKeyId>
+        where TKeyCompId : IEquatable<TKeyCompId>
+        where TKeyId : IEquatable<TKeyId>
     {
         /// <summary>
         /// Initializes a new instance of <see cref="IdentityUser{TKeyCompId, TKeyId}"/>.

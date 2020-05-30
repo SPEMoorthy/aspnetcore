@@ -706,6 +706,7 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
             return new List<TUser>();
         }
 
+
         /// <summary>
         /// Find a user token if it exists.
         /// </summary>

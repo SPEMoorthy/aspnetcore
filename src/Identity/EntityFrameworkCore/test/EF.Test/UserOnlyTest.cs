@@ -72,11 +72,11 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore.Test
             Assert.NotNull(userStore);
             Assert.NotNull(manager);
 
-            var userA = new IdentityUser(Guid.NewGuid().ToString());
+            var userA = new IdentityUser(1, Guid.NewGuid().ToString(), "dupe");
             userA.Email = "dupe@dupe.com";
             const string password = "1qaz@WSX";
             IdentityResultAssert.IsSuccess(await manager.CreateAsync(userA, password));
-            var userB = new IdentityUser(Guid.NewGuid().ToString());
+            var userB = new IdentityUser(1, Guid.NewGuid().ToString(), "dupe");
             userB.Email = "dupe@dupe.com";
             IdentityResultAssert.IsSuccess(await manager.CreateAsync(userB, password));
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await manager.FindByEmailAsync("dupe@dupe.com"));

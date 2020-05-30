@@ -56,7 +56,7 @@ namespace Microsoft.AspNetCore.Identity.EntityFrameworkCore
         where TKeyId : IEquatable<TKeyId>
     {
         /// <summary>
-        /// Constructs a new instance of <see cref="UserStore{TUser, TRole, TContext, TKey}"/>.
+        /// Constructs a new instance of <see cref="UserStore{TUser, TRole, TContext, TKeyCompId, TKeyId}"/>.
         /// </summary>
         /// <param name="context">The <see cref="DbContext"/>.</param>
         /// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
